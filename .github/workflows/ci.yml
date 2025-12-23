@@ -1,0 +1,38 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ldv_backend .
+
+      - name: Save image
+        run: docker save ldv_backend | gzip > backend.tar.gz
+
+      - name: Copy image
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.LDV_BACKEND_SSH }}
+          source: backend.tar.gz
+          target: ~/apps/backend
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.LDV_BACKEND_SSH }}
+          script: |
+            cd ~/apps/backend
+            docker load < backend.tar.gz
+            docker compose up -d
