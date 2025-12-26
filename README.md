@@ -10,3 +10,9 @@ An example application built with dart_frog
 [dart_frog_lint_link]: https://pub.dev/packages/dart_frog_lint
 [license_badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [license_link]: https://opensource.org/licenses/MIT
+
+## How to generate code?
+
+```bash
+dart run build_runner build
+```
