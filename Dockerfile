@@ -29,4 +29,4 @@ COPY --from=build /app/build/bin/server /app/bin/
 # COPY --from=build /app/build/public /public/
 
 # Start the server.
-CMD ["/app/bin/server"]
+CMD ["/app/bin/server", "--address", "0.0.0.0", "--port", "8080"]
