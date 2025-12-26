@@ -24,7 +24,7 @@ jobs:
           username: patrick
           key: ${{ secrets.LDV_BACKEND_SSH }}
           source: backend.tar.gz
-          target: ~/opt/backend
+          target: /opt/backend
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -33,6 +33,6 @@ jobs:
           username: patrick
           key: ${{ secrets.LDV_BACKEND_SSH }}
           script: |
-            cd ~/opt/backend
+            cd /opt/backend
             docker load < backend.tar.gz
             docker compose up -d
