@@ -76,12 +76,3 @@ Future<Response> _post({required Request request}) async {
     }),
   );
 }
-
-Map<String, dynamic> encodeDbRow(Map<String, dynamic> row) {
-  return row.map((key, value) {
-    if (value is DateTime) {
-      return MapEntry(key, value.toIso8601String());
-    }
-    return MapEntry(key, value);
-  });
-}
