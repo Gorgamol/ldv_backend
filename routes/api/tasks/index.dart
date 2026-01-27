@@ -31,7 +31,7 @@ Future<Response> _post({required Request request}) async {
   Map<String, dynamic>? body;
 
   try {
-    final raw = request.body();
+    final raw = await request.body();
     print(raw);
     body = (await request.json()) as Map<String, dynamic>;
   } on FormatException catch (e) {
