@@ -22,20 +22,17 @@ Future<Response> _get() async {
     ''',
   );
 
-  return Response.json(
-    body: tasks.map(
-      (row) {
-        return row.map(
-          (column) {
-            if (column is DateTime) {
-              return column.toIso8601String();
-            }
-            return column;
-          },
-        );
-      },
-    ).toList(),
-  );
+  final jsonTasks = tasks.map((row) {
+    final map = row.toColumnMap();
+    return map.map((key, value) {
+      if (value is DateTime) {
+        return MapEntry(key, value.toIso8601String());
+      }
+      return MapEntry(key, value);
+    });
+  }).toList();
+
+  return Response.json(body: jsonTasks);
 }
 
 Future<Response> _post({required Request request}) async {
@@ -73,13 +70,18 @@ Future<Response> _post({required Request request}) async {
 
   return Response.json(
     statusCode: 201,
-    body: result.first.map(
-      (column) {
-        if (column is DateTime) {
-          return column.toIso8601String();
-        }
-        return column;
-      },
-    ),
+    body: result.first.toColumnMap().map((key, value) {
+      if (value is DateTime) return MapEntry(key, value.toIso8601String());
+      return MapEntry(key, value);
+    }),
   );
+}
+
+Map<String, dynamic> encodeDbRow(Map<String, dynamic> row) {
+  return row.map((key, value) {
+    if (value is DateTime) {
+      return MapEntry(key, value.toIso8601String());
+    }
+    return MapEntry(key, value);
+  });
 }
