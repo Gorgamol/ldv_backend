@@ -12,10 +12,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t ldv_backend .
+        run: docker build -t ldv-backend .
 
       - name: Save image
-        run: docker save ldv_backend | gzip > backend.tar.gz
+        run: docker save ldv-backend | gzip > backend.tar.gz
 
       - name: Copy image
         uses: appleboy/scp-action@v0.1.4
