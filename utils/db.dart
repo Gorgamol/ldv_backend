@@ -11,5 +11,5 @@ Future<Connection> openDatabase() async {
     exit(1);
   }
 
-  return Connection.openFromUrl(dbUrl);
+  return Connection.openFromUrl('$dbUrl?sslmode=disable');
 }
