@@ -39,7 +39,6 @@ Future<Response> _post({required Request request}) async {
         'error': 'Invalid JSON body',
         'details': e.message,
         'headers': request.headers,
-        'body': await request.body(),
       },
     );
   }
