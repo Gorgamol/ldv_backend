@@ -23,7 +23,18 @@ Future<Response> _get() async {
   );
 
   return Response.json(
-    body: tasks.map((row) => row.toColumnMap()).toList(),
+    body: tasks.map(
+      (row) {
+        return row.map(
+          (column) {
+            if (column is DateTime) {
+              return column.toIso8601String();
+            }
+            return column;
+          },
+        );
+      },
+    ).toList(),
   );
 }
 
@@ -31,8 +42,6 @@ Future<Response> _post({required Request request}) async {
   Map<String, dynamic>? body;
 
   try {
-    final raw = await request.body();
-    print(raw);
     body = (await request.json()) as Map<String, dynamic>;
   } on FormatException catch (e) {
     return Response.json(
@@ -64,6 +73,13 @@ Future<Response> _post({required Request request}) async {
 
   return Response.json(
     statusCode: 201,
-    body: result.first.toColumnMap(),
+    body: result.first.map(
+      (column) {
+        if (column is DateTime) {
+          return column.toIso8601String();
+        }
+        return column;
+      },
+    ),
   );
 }
