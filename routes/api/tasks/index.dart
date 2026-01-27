@@ -5,25 +5,11 @@ import 'package:dart_frog/dart_frog.dart';
 import '../../../utils/db.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  try {
-    final body = await context.request.json() as Map<String, dynamic>;
-
-    return switch (context.request.method) {
-      HttpMethod.get => await _get(),
-      HttpMethod.post => await _post(body: body),
-      _ => Response(statusCode: HttpStatus.methodNotAllowed),
-    };
-  } on FormatException catch (e) {
-    return Response.json(
-      statusCode: 400,
-      body: {
-        'error': 'Invalid JSON body',
-        'details': e.message,
-        'headers': context.request.headers,
-        'body': await context.request.body(),
-      },
-    );
-  }
+  return switch (context.request.method) {
+    HttpMethod.get => await _get(),
+    HttpMethod.post => await _post(request: context.request),
+    _ => Response(statusCode: HttpStatus.methodNotAllowed),
+  };
 }
 
 Future<Response> _get() async {
@@ -40,7 +26,23 @@ Future<Response> _get() async {
   );
 }
 
-Future<Response> _post({required Map<String, dynamic> body}) async {
+Future<Response> _post({required Request request}) async {
+  Map<String, dynamic>? body;
+
+  try {
+    body = (await request.json()) as Map<String, dynamic>;
+  } on FormatException catch (e) {
+    return Response.json(
+      statusCode: 400,
+      body: {
+        'error': 'Invalid JSON body',
+        'details': e.message,
+        'headers': request.headers,
+        'body': await request.body(),
+      },
+    );
+  }
+
   final db = await openDatabase();
 
   final result = await db.execute(
