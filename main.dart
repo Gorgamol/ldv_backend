@@ -1,0 +1,29 @@
+// ignore_for_file: avoid_print
+
+import 'dart:io';
+
+import 'package:dart_frog/dart_frog.dart';
+
+import 'utils/db.dart';
+
+Future<HttpServer> run(Handler handler, InternetAddress ip, int port) async {
+  final conn = await openDatabase();
+
+  await conn.execute('''
+    CREATE TABLE IF NOT EXISTS tasks (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMP NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      status TEXT NOT NULL,
+      priority TEXT NOT NULL,
+      author TEXT NOT NULL,
+    );
+  ''');
+
+  await conn.close();
+
+  return serve(handler, ip, port);
+}
