@@ -27,10 +27,10 @@ Future<Response> _get() async {
 }
 
 Future<Response> _post({required Request request}) async {
-  Map<String, dynamic>? body;
+  Map<String, dynamic>? body = {};
 
   try {
-    body = (await request.json()) as Map<String, dynamic>;
+    //body = (await request.json()) as Map<String, dynamic>;
   } on FormatException catch (e) {
     return Response.json(
       statusCode: 400,
