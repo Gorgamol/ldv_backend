@@ -5,13 +5,25 @@ import 'package:dart_frog/dart_frog.dart';
 import '../../../utils/db.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  return switch (context.request.method) {
-    HttpMethod.get => await _get(),
-    HttpMethod.post => await _post(
-      body: await context.request.json() as Map<String, dynamic>,
-    ),
-    _ => Response(statusCode: HttpStatus.methodNotAllowed),
-  };
+  try {
+    final body = await context.request.json() as Map<String, dynamic>;
+
+    return switch (context.request.method) {
+      HttpMethod.get => await _get(),
+      HttpMethod.post => await _post(body: body),
+      _ => Response(statusCode: HttpStatus.methodNotAllowed),
+    };
+  } on FormatException catch (e) {
+    return Response.json(
+      statusCode: 400,
+      body: {
+        'error': 'Invalid JSON body',
+        'details': e.message,
+        'headers': context.request.headers,
+        'body': await context.request.body(),
+      },
+    );
+  }
 }
 
 Future<Response> _get() async {
@@ -38,7 +50,7 @@ Future<Response> _post({required Map<String, dynamic> body}) async {
       RETURNING *
       ''',
     parameters: {
-      'task': body['title'],
+      'title': body['title'],
       'description': body['description'],
       'author': body['author'],
       'priority': body['priority'],
