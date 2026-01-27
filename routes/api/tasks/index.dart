@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
+import 'package:postgres/postgres.dart';
 
 import '../../../utils/db.dart';
 
@@ -27,10 +28,10 @@ Future<Response> _get() async {
 }
 
 Future<Response> _post({required Request request}) async {
-  Map<String, dynamic>? body = {};
+  Map<String, dynamic>? body;
 
   try {
-    //body = (await request.json()) as Map<String, dynamic>;
+    body = (await request.json()) as Map<String, dynamic>;
   } on FormatException catch (e) {
     return Response.json(
       statusCode: 400,
@@ -46,11 +47,11 @@ Future<Response> _post({required Request request}) async {
   final db = await openDatabase();
 
   final result = await db.execute(
-    '''
+    Sql.named('''
       INSERT INTO tasks (title, description, author, priority, status)
       VALUES (@title, @description, @author, @priority, @status)
       RETURNING *
-      ''',
+      '''),
     parameters: {
       'title': body['title'],
       'description': body['description'],
