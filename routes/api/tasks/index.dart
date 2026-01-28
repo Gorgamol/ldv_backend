@@ -22,8 +22,6 @@ Future<Response> _get({
 }) async {
   final db = await openDatabase();
 
-  final body = (await request.json()) as Map<String, dynamic>;
-
   final tasks = await db.execute(
     Sql.named(
       '''
@@ -31,7 +29,7 @@ Future<Response> _get({
     ''',
     ),
     parameters: {
-      'branch': body['branch'],
+      'branch': request.uri.queryParameters['branch'],
     },
   );
 
@@ -79,7 +77,7 @@ Future<Response> _post({
       'author': body['author'],
       'priority': body['priority'],
       'status': body['status'],
-      'branch': body['branch'],
+      'branch': request.uri.queryParameters['branch'],
     },
   );
 
