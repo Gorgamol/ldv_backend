@@ -5,15 +5,13 @@ import 'package:postgres/postgres.dart';
 
 import '../../../utils/db.dart';
 
-Future<Response> onRequest(RequestContext context, String branch) async {
+Future<Response> onRequest(RequestContext context) async {
   return switch (context.request.method) {
     HttpMethod.get => await _get(
       request: context.request,
-      branch: branch,
     ),
     HttpMethod.post => await _post(
       request: context.request,
-      branch: branch,
     ),
     _ => Response(statusCode: HttpStatus.methodNotAllowed),
   };
@@ -21,9 +19,10 @@ Future<Response> onRequest(RequestContext context, String branch) async {
 
 Future<Response> _get({
   required Request request,
-  required String branch,
 }) async {
   final db = await openDatabase();
+
+  final body = (await request.json()) as Map<String, dynamic>;
 
   final tasks = await db.execute(
     Sql.named(
@@ -32,7 +31,7 @@ Future<Response> _get({
     ''',
     ),
     parameters: {
-      'branch': branch,
+      'branch': body['branch'],
     },
   );
 
@@ -51,7 +50,6 @@ Future<Response> _get({
 
 Future<Response> _post({
   required Request request,
-  required String branch,
 }) async {
   Map<String, dynamic>? body;
 
@@ -81,7 +79,7 @@ Future<Response> _post({
       'author': body['author'],
       'priority': body['priority'],
       'status': body['status'],
-      'branch': branch,
+      'branch': body['branch'],
     },
   );
 
