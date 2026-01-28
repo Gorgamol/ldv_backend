@@ -20,7 +20,7 @@ Future<HttpServer> run(Handler handler, InternetAddress ip, int port) async {
       status TEXT NOT NULL,
       priority TEXT NOT NULL,
       author TEXT NOT NULL,
-      branch TEXT NOT NULL,
+      branch TEXT NOT NULL
     );
   ''');
 
