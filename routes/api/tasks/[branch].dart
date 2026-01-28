@@ -5,21 +5,35 @@ import 'package:postgres/postgres.dart';
 
 import '../../../utils/db.dart';
 
-Future<Response> onRequest(RequestContext context) async {
+Future<Response> onRequest(RequestContext context, String branch) async {
   return switch (context.request.method) {
-    HttpMethod.get => await _get(),
-    HttpMethod.post => await _post(request: context.request),
+    HttpMethod.get => await _get(
+      request: context.request,
+      branch: branch,
+    ),
+    HttpMethod.post => await _post(
+      request: context.request,
+      branch: branch,
+    ),
     _ => Response(statusCode: HttpStatus.methodNotAllowed),
   };
 }
 
-Future<Response> _get() async {
+Future<Response> _get({
+  required Request request,
+  required String branch,
+}) async {
   final db = await openDatabase();
 
   final tasks = await db.execute(
-    '''
-      SELECT * FROM tasks WHERE deleted_at IS NULL
+    Sql.named(
+      '''
+      SELECT * FROM tasks WHERE deleted_at IS NULL AND branch = @branch
     ''',
+    ),
+    parameters: {
+      'branch': branch,
+    },
   );
 
   final jsonTasks = tasks.map((row) {
@@ -35,7 +49,10 @@ Future<Response> _get() async {
   return Response.json(body: jsonTasks);
 }
 
-Future<Response> _post({required Request request}) async {
+Future<Response> _post({
+  required Request request,
+  required String branch,
+}) async {
   Map<String, dynamic>? body;
 
   try {
@@ -53,11 +70,10 @@ Future<Response> _post({required Request request}) async {
 
   final db = await openDatabase();
 
-  final result = await db.execute(
+  await db.execute(
     Sql.named('''
-      INSERT INTO tasks (title, description, author, priority, status)
-      VALUES (@title, @description, @author, @priority, @status)
-      RETURNING *
+      INSERT INTO tasks (title, description, author, priority, status, branch)
+      VALUES (@title, @description, @author, @priority, @status, @branch)
       '''),
     parameters: {
       'title': body['title'],
@@ -65,14 +81,11 @@ Future<Response> _post({required Request request}) async {
       'author': body['author'],
       'priority': body['priority'],
       'status': body['status'],
+      'branch': branch,
     },
   );
 
-  return Response.json(
-    statusCode: 201,
-    body: result.first.toColumnMap().map((key, value) {
-      if (value is DateTime) return MapEntry(key, value.toIso8601String());
-      return MapEntry(key, value);
-    }),
-  );
+  await db.close();
+
+  return Response.json(statusCode: 201);
 }
