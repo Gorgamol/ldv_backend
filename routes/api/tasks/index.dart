@@ -33,6 +33,8 @@ Future<Response> _get({
     },
   );
 
+  await db.close();
+
   final jsonTasks = tasks.map((row) {
     final map = row.toColumnMap();
     return map.map((key, value) {
