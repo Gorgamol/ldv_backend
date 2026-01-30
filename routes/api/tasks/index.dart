@@ -68,10 +68,11 @@ Future<Response> _post({
 
   final db = await openDatabase();
 
-  await db.execute(
+  final result = await db.execute(
     Sql.named('''
       INSERT INTO tasks (title, description, author, priority, status, branch)
       VALUES (@title, @description, @author, @priority, @status, @branch)
+      RETURNING *;
       '''),
     parameters: {
       'title': body['title'],
@@ -83,7 +84,19 @@ Future<Response> _post({
     },
   );
 
+  final task = result.first.toColumnMap().map(
+    (key, value) {
+      if (value is DateTime) {
+        return MapEntry(key, value.toIso8601String());
+      }
+      return MapEntry(key, value);
+    },
+  );
+
   await db.close();
 
-  return Response.json(statusCode: 201);
+  return Response.json(
+    statusCode: 201,
+    body: task,
+  );
 }
