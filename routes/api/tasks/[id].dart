@@ -93,7 +93,7 @@ Future<Response> _patch({
         Sql.named(
           'UPDATE tasks '
           'SET updated_at = NOW(), '
-          'title = @title '
+          'title = @title, '
           'description = @description, '
           'priority = @priority, '
           'status = @status, '
