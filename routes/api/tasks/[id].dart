@@ -98,7 +98,6 @@ Future<Response> _patch({
           'priority = @priority, '
           'status = @status, '
           'author = @author, '
-          'branch = @branch '
           'WHERE id = @id',
         ),
         parameters: {
@@ -108,7 +107,6 @@ Future<Response> _patch({
           'author': body['author'],
           'priority': body['priority'],
           'status': body['status'],
-          'branch': body['branch'],
         },
       );
     },
