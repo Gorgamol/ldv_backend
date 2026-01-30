@@ -7,6 +7,7 @@ import '../../../utils/db.dart';
 
 Future<Response> onRequest(RequestContext context, String id) async {
   return switch (context.request.method) {
+    HttpMethod.get => await _get(id: id),
     HttpMethod.delete => await _delete(id: id),
     HttpMethod.patch => await _patch(
       id: id,
@@ -14,6 +15,41 @@ Future<Response> onRequest(RequestContext context, String id) async {
     ),
     _ => Response(statusCode: HttpStatus.methodNotAllowed),
   };
+}
+
+Future<Response> _get({required String id}) async {
+  final taskId = int.tryParse(id);
+
+  if (taskId == null) {
+    return Response.json(
+      statusCode: 400,
+      body: {'error': 'Invalid task ID'},
+    );
+  }
+
+  late final Result result;
+
+  await doDatabaseOperation(
+    (db) async {
+      result = await db.execute(
+        Sql.named('SELECT * FROM tasks WHERE deleted_at IS NULL AND id = @id'),
+        parameters: {'id': taskId},
+      );
+    },
+  );
+
+  final task = result.first.toColumnMap().map(
+    (key, value) {
+      if (value is DateTime) {
+        return MapEntry(key, value.toIso8601String());
+      }
+      return MapEntry(key, value);
+    },
+  );
+
+  return Response.json(
+    body: task,
+  );
 }
 
 Future<Response> _delete({required String id}) async {
