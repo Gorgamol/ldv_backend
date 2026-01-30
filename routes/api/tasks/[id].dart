@@ -97,7 +97,7 @@ Future<Response> _patch({
           'description = @description, '
           'priority = @priority, '
           'status = @status, '
-          'author = @author, '
+          'author = @author '
           'WHERE id = @id',
         ),
         parameters: {
