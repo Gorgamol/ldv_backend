@@ -31,7 +31,7 @@ Future<void> runMigrations(Connection connection) async {
 
     if (applied.contains(version)) continue;
 
-    final sql = await file.readAsString();
+    final sql = Sql.named(await file.readAsString());
 
     stdout.writeln('Applying migration: $version');
 
@@ -39,7 +39,7 @@ Future<void> runMigrations(Connection connection) async {
       (ctx) async {
         await ctx.execute(sql);
         await ctx.execute(
-          'INSERT INTO schema_migrations (version) VALUES (@v)',
+          Sql.named('INSERT INTO schema_migrations (version) VALUES (@v)'),
           parameters: {'v': version},
         );
       },
