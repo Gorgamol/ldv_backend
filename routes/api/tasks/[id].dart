@@ -32,7 +32,14 @@ Future<Response> _get({required String id}) async {
   await doDatabaseOperation(
     (db) async {
       result = await db.execute(
-        Sql.named('SELECT * FROM tasks WHERE deleted_at IS NULL AND id = @id'),
+        Sql.named('''
+        SELECT t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, 
+        json_agg(json_build_object('id', c.id, 'name', c.name)) AS categories
+        FROM tasks t
+        LEFT JOIN task_categories tc ON tc.task_id = t.id
+        LEFT JOIN categories c ON c.id = tc.category_id
+        WHERE t.id=@id AND t.deleted_at IS NULL
+        '''),
         parameters: {'id': taskId},
       );
     },
@@ -64,8 +71,17 @@ Future<Response> _delete({required String id}) async {
   await doDatabaseOperation(
     (db) async {
       await db.execute(
-        Sql.named(' UPDATE tasks SET deleted_at = NOW() WHERE id = @id'),
+        Sql.named('UPDATE tasks SET deleted_at = NOW() WHERE id = @id'),
         parameters: {'id': taskId},
+      );
+
+      await db.execute(
+        Sql.named(
+          'UPDATE task_categories SET deleted_at = NOW() WHERE task_id=@id',
+        ),
+        parameters: {
+          'id': taskId,
+        },
       );
     },
   );
@@ -79,6 +95,7 @@ Future<Response> _patch({
 }) async {
   final taskId = int.tryParse(id);
   final body = (await request.json()) as Map<String, dynamic>;
+  final categoryIds = (body['categories'] as List?)?.cast<int>() ?? [];
 
   if (taskId == null) {
     return Response.json(
@@ -109,6 +126,26 @@ Future<Response> _patch({
           'status': body['status'],
         },
       );
+
+      await db.execute(
+        Sql.named('DELETE FROM task_categories WHERE task_id=@id'),
+        parameters: {
+          'id': taskId,
+        },
+      );
+
+      for (final id in categoryIds) {
+        await db.execute(
+          Sql.named(
+            'INSERT INTO task_categories (task_id, category_id) '
+            'VALUES (@task, @category)',
+          ),
+          parameters: {
+            'task': taskId,
+            'category': id,
+          },
+        );
+      }
     },
   );
 

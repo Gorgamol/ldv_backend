@@ -4,27 +4,15 @@ import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
 
+import 'migrations/migration.dart';
 import 'utils/db.dart';
 
 Future<HttpServer> run(Handler handler, InternetAddress ip, int port) async {
-  final conn = await openDatabase();
+  final connection = await openDatabase();
 
-  await conn.execute('''
-    CREATE TABLE IF NOT EXISTS tasks (
-      id SERIAL PRIMARY KEY,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      deleted_at TIMESTAMP NULL,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      status TEXT NOT NULL,
-      priority TEXT NOT NULL,
-      author TEXT NOT NULL,
-      branch TEXT NOT NULL
-    );
-  ''');
+  await runMigrations(connection);
 
-  await conn.close();
+  await connection.close();
 
   return serve(handler, ip, port);
 }
