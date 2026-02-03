@@ -25,14 +25,8 @@ Future<Response> _get({
   final tasks = await db.execute(
     Sql.named(
       '''
-      SELECT t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch,
-      COALESCE(json_agg(json_build_object('id', c.id, 'name', c.name)) FILTER (WHERE c.id IS NOT NULL), '[]') AS categories
-      FROM tasks t
-      LEFT JOIN task_categories tc ON tc.task_id = t.id
-      LEFT JOIN categories c ON c.id = tc.category_id
-      WHERE t.branch=@branch AND t.deleted_at IS NULL
-      GROUP BY t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch
-      ''',
+      SELECT * FROM tasks WHERE deleted_at IS NULL AND branch = @branch
+    ''',
     ),
     parameters: {
       'branch': request.uri.queryParameters['branch'],
@@ -72,14 +66,13 @@ Future<Response> _post({
     );
   }
 
-  final categoryIds = (body['categories'] as List?)?.cast<int>() ?? [];
-
   final db = await openDatabase();
 
-  final insertedTask = await db.execute(
+  final result = await db.execute(
     Sql.named('''
       INSERT INTO tasks (title, description, author, priority, status, branch)
       VALUES (@title, @description, @author, @priority, @status, @branch)
+      RETURNING *;
       '''),
     parameters: {
       'title': body['title'],
@@ -89,32 +82,6 @@ Future<Response> _post({
       'status': body['status'],
       'branch': request.uri.queryParameters['branch'],
     },
-  );
-
-  for (final id in categoryIds) {
-    await db.execute(
-      Sql.named(
-        'INSERT INTO task_categories (task_id, category_id) '
-        'VALUES (@task, @category)',
-      ),
-      parameters: {
-        'task': insertedTask.first[0]! as int,
-        'category': id,
-      },
-    );
-  }
-
-  final result = await db.execute(
-    Sql.named('''
-        SELECT t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch,
-        COALESCE(json_agg(json_build_object('id', c.id, 'name', c.name)) FILTER (WHERE c.id IS NOT NULL), '[]') AS categories
-        FROM tasks t
-        LEFT JOIN task_categories tc ON tc.task_id = t.id
-        LEFT JOIN categories c ON c.id = tc.category_id
-        WHERE t.id=@id AND t.deleted_at IS NULL
-        GROUP BY t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch
-        '''),
-    parameters: {'id': insertedTask.first[0]! as int},
   );
 
   final task = result.first.toColumnMap().map(
