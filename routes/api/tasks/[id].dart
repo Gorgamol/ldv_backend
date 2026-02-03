@@ -34,7 +34,7 @@ Future<Response> _get({required String id}) async {
       result = await db.execute(
         Sql.named('''
         SELECT t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch,
-        COALESCE(json_agg(json_build_object('id', c.id, 'name', c.name)) FILTER (WHERE c.id IS NOT NULL)) AS categories
+        COALESCE(json_agg(json_build_object('id', c.id, 'name', c.name)) FILTER (WHERE c.id IS NOT NULL), []) AS categories
         FROM tasks t
         LEFT JOIN task_categories tc ON tc.task_id = t.id
         LEFT JOIN categories c ON c.id = tc.category_id
