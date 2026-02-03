@@ -39,7 +39,18 @@ Future<Response> _get({
 
   await db.close();
 
-  final categories = result.map((row) => row.toColumnMap()).toList();
+  final categories = result
+      .map(
+        (row) => row.toColumnMap().map(
+          (key, value) {
+            if (value is DateTime) {
+              return MapEntry(key, value.toIso8601String());
+            }
+            return MapEntry(key, value);
+          },
+        ),
+      )
+      .toList();
 
   return Response.json(body: categories);
 }
@@ -78,7 +89,18 @@ Future<Response> _post({
 
   await db.close();
 
-  final categories = result.map((row) => row.toColumnMap()).toList();
+  final categories = result
+      .map(
+        (row) => row.toColumnMap().map(
+          (key, value) {
+            if (value is DateTime) {
+              return MapEntry(key, value.toIso8601String());
+            }
+            return MapEntry(key, value);
+          },
+        ),
+      )
+      .toList();
 
   return Response.json(body: categories);
 }
