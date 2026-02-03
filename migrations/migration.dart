@@ -17,7 +17,7 @@ Future<void> runMigrations(Connection connection) async {
   final applied = appliedRows.map((r) => r[0]! as String).toSet();
 
   final migrationFiles =
-      Directory('migrations')
+      Directory('.')
           .listSync()
           .whereType<File>()
           .where((f) => f.path.endsWith('.sql'))
