@@ -101,6 +101,5 @@ Future<Response> _post({
         ),
       )
       .toList();
-
   return Response.json(body: categories);
 }
