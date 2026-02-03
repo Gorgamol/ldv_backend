@@ -106,7 +106,7 @@ Future<Response> _post({
 
   final result = await db.execute(
     Sql.named('''
-        SELECT t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch
+        SELECT t.id, t.created_at, t.updated_at, t.deleted_at, t.title, t.description, t.status, t.priority, t.author, t.branch,
         json_agg(json_build_object('id', c.id, 'name', c.name)) AS categories
         FROM tasks t
         LEFT JOIN task_categories tc ON tc.task_id = t.id
