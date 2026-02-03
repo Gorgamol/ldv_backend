@@ -17,12 +17,14 @@ Future<void> runMigrations(Connection connection) async {
   final applied = appliedRows.map((r) => r[0]! as String).toSet();
 
   final migrationFiles =
-      Directory('.')
+      Directory.current
           .listSync()
           .whereType<File>()
           .where((f) => f.path.endsWith('.sql'))
           .toList()
         ..sort((a, b) => a.path.compareTo(b.path));
+
+  stdout.writeln('Migrations: ${migrationFiles.length}');
 
   for (final file in migrationFiles) {
     final version = file.uri.pathSegments.last;
