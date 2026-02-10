@@ -32,7 +32,35 @@ Future<Response> _get({required String id}) async {
   await doDatabaseOperation(
     (db) async {
       result = await db.execute(
-        Sql.named('SELECT * FROM tasks WHERE deleted_at IS NULL AND id = @id'),
+        Sql.named('''
+SELECT
+    t.id,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at,
+    t.title,
+    t.description,
+    t.status,
+    t.priority,
+    t.author,
+    t.branch,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'id', c.id,
+                'name', c.name,
+                'branch', c.branch
+            )
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'
+    ) AS categories
+FROM tasks t
+LEFT JOIN task_categories tc ON tc.task_id = t.id
+LEFT JOIN categories c ON c.id = tc.category_id
+WHERE t.id = @id AND t.deleted_at IS NULL
+GROUP BY t.id;
+
+'''),
         parameters: {'id': taskId},
       );
     },
@@ -64,7 +92,7 @@ Future<Response> _delete({required String id}) async {
   await doDatabaseOperation(
     (db) async {
       await db.execute(
-        Sql.named(' UPDATE tasks SET deleted_at = NOW() WHERE id = @id'),
+        Sql.named('UPDATE tasks SET deleted_at = NOW() WHERE id = @id'),
         parameters: {'id': taskId},
       );
     },

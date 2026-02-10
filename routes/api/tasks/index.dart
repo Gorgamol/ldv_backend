@@ -25,7 +25,33 @@ Future<Response> _get({
   final tasks = await db.execute(
     Sql.named(
       '''
-      SELECT * FROM tasks WHERE deleted_at IS NULL AND branch = @branch
+      SELECT
+    t.id,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at,
+    t.title,
+    t.description,
+    t.status,
+    t.priority,
+    t.author,
+    t.branch,
+    COALESCE(
+        json_agg(
+            json_build_object(
+                'id', c.id,
+                'name', c.name,
+                'branch', c.branch
+            )
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'
+    ) AS categories
+FROM tasks t
+LEFT JOIN task_categories tc ON tc.task_id = t.id
+LEFT JOIN categories c ON c.id = tc.category_id
+WHERE t.deleted_at IS NULL AND branch = @branch
+GROUP BY t.id
+ORDER BY t.created_at DESC;
     ''',
     ),
     parameters: {
