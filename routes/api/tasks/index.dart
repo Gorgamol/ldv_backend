@@ -49,7 +49,7 @@ Future<Response> _get({
 FROM tasks t
 LEFT JOIN task_categories tc ON tc.task_id = t.id
 LEFT JOIN categories c ON c.id = tc.category_id
-WHERE t.deleted_at IS NULL AND branch = @branch
+WHERE t.deleted_at IS NULL AND t.branch = @branch
 GROUP BY t.id
 ORDER BY t.created_at DESC;
     ''',
