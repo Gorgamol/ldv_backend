@@ -118,16 +118,32 @@ Future<Response> _patch({
   await doDatabaseOperation(
     (db) async {
       await db.execute(
-        Sql.named(
-          'UPDATE tasks '
-          'SET updated_at = NOW(), '
-          'title = @title, '
-          'description = @description, '
-          'priority = @priority, '
-          'status = @status, '
-          'author = @author '
-          'WHERE id = @id',
-        ),
+        Sql.named('''
+WITH updated_task AS (
+    UPDATE tasks
+    SET
+        title = @title,
+        description = @description,
+        status = @status,
+        priority = @priority,
+        author = @author,
+        branch = @branch,
+        updated_at = NOW()
+    WHERE id = @id
+    RETURNING id
+),
+deleted_categories AS (
+    DELETE FROM task_categories
+    WHERE task_id = @id
+      AND category_id NOT IN (SELECT UNNEST(:category_ids::INT[]))
+),
+inserted_categories AS (
+    INSERT INTO task_categories (task_id, category_id)
+    SELECT :task_id, UNNEST(:category_ids::INT[])
+    ON CONFLICT DO NOTHING
+)
+SELECT id FROM updated_task;
+'''),
         parameters: {
           'id': taskId,
           'title': body['title'],
@@ -135,6 +151,7 @@ Future<Response> _patch({
           'author': body['author'],
           'priority': body['priority'],
           'status': body['status'],
+          'category_ids': body['category_ids'],
         },
       );
     },

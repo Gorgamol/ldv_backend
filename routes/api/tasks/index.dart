@@ -94,11 +94,35 @@ Future<Response> _post({
 
   final db = await openDatabase();
 
-  final result = await db.execute(
+  await db.execute(
     Sql.named('''
-      INSERT INTO tasks (title, description, author, priority, status, branch)
-      VALUES (@title, @description, @author, @priority, @status, @branch)
-      RETURNING *;
+WITH new_task AS (
+    INSERT INTO tasks (
+        title,
+        description,
+        status,
+        priority,
+        author,
+        branch
+    )
+    VALUES (
+        @title,
+        @description,
+        @status,
+        @priority,
+        @author,
+        @branch
+    )
+    RETURNING id
+),
+inserted_categories AS (
+    INSERT INTO task_categories (task_id, category_id)
+    SELECT new_task.id, UNNEST(:category_ids::INT[])
+    FROM new_task
+)
+SELECT id FROM new_task;
+
+
       '''),
     parameters: {
       'title': body['title'],
@@ -106,23 +130,12 @@ Future<Response> _post({
       'author': body['author'],
       'priority': body['priority'],
       'status': body['status'],
+      'category_ids': body['category_ids'],
       'branch': request.uri.queryParameters['branch'],
-    },
-  );
-
-  final task = result.first.toColumnMap().map(
-    (key, value) {
-      if (value is DateTime) {
-        return MapEntry(key, value.toIso8601String());
-      }
-      return MapEntry(key, value);
     },
   );
 
   await db.close();
 
-  return Response.json(
-    statusCode: 201,
-    body: task,
-  );
+  return Response();
 }
