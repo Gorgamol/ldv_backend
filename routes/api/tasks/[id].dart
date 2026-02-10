@@ -135,11 +135,11 @@ WITH updated_task AS (
 deleted_categories AS (
     DELETE FROM task_categories
     WHERE task_id = @id
-      AND category_id NOT IN (SELECT UNNEST(:category_ids::INT[]))
+      AND category_id NOT IN (SELECT UNNEST(@category_ids::INT[]))
 ),
 inserted_categories AS (
     INSERT INTO task_categories (task_id, category_id)
-    SELECT :task_id, UNNEST(:category_ids::INT[])
+    SELECT :task_id, UNNEST(@category_ids::INT[])
     ON CONFLICT DO NOTHING
 )
 SELECT id FROM updated_task;
@@ -151,7 +151,7 @@ SELECT id FROM updated_task;
           'author': body['author'],
           'priority': body['priority'],
           'status': body['status'],
-          'category_ids': body['category_ids'],
+          'category_ids': (body['category_ids'] as List?)?.cast<int>() ?? [],
         },
       );
     },

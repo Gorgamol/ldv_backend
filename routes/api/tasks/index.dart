@@ -117,7 +117,7 @@ WITH new_task AS (
 ),
 inserted_categories AS (
     INSERT INTO task_categories (task_id, category_id)
-    SELECT new_task.id, UNNEST(:category_ids::INT[])
+    SELECT new_task.id, UNNEST(@category_ids::INT[])
     FROM new_task
 )
 SELECT id FROM new_task;
@@ -130,7 +130,7 @@ SELECT id FROM new_task;
       'author': body['author'],
       'priority': body['priority'],
       'status': body['status'],
-      'category_ids': body['category_ids'],
+      'category_ids': (body['category_ids'] as List?)?.cast<int>() ?? [],
       'branch': request.uri.queryParameters['branch'],
     },
   );
