@@ -127,7 +127,6 @@ WITH updated_task AS (
         status = @status,
         priority = @priority,
         author = @author,
-        branch = @branch,
         updated_at = NOW()
     WHERE id = @id
     RETURNING id
