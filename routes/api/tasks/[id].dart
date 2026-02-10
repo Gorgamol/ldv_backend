@@ -138,7 +138,7 @@ deleted_categories AS (
 ),
 inserted_categories AS (
     INSERT INTO task_categories (task_id, category_id)
-    SELECT :task_id, UNNEST(@category_ids::INT[])
+    SELECT @id, UNNEST(@category_ids::INT[])
     ON CONFLICT DO NOTHING
 )
 SELECT id FROM updated_task;
